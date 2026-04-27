@@ -15,13 +15,13 @@
 ```javascript
 const vinicius = {
   localização: "Matão, São Paulo 🇧🇷",
-  formação: "Análise e Desenvolvimento de Sistemas — FATEC Matão",
+  formação: "Desenvolvimento de Software Multiplataforma — FATEC Matão",
   foco: ["Frontend", "Backend", "Banco de Dados"],
   tecnologias: {
     frontend: ["React", "Vite", "JavaScript", "HTML5", "CSS3"],
-    backend: ["Node.js"],
-    banco_de_dados: ["Firebase", "NoSQL"],
-    ferramentas: ["Git", "GitHub", "VS Code"]
+    backend: ["Node.js", "C#", ".NET"],
+    banco_de_dados: ["Firebase", "NoSQL", "MySQL"],
+    ferramentas: ["Git", "GitHub", "VS Code, Visual Studio"]
   },
   atualmente: "Desenvolvendo projetos acadêmicos e aprimorando habilidades 🔥",
   curiosidade: "Gosto de transformar ideias em código funcional ⚡"
