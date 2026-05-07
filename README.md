@@ -66,17 +66,6 @@ const vinicius = {
 
 ---
 
-## 📌 Projetos em Destaque
-
-<div align="center">
-
-[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=Vinicius-Santos234&repo=Projeto-React-Vite-Firebase&theme=tokyonight&hide_border=true&bg_color=0d1117&title_color=58a6ff&text_color=c9d1d9&icon_color=58a6ff)](https://github.com/Vinicius-Santos234/Projeto-React-Vite-Firebase)
-[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=Vinicius-Santos234&repo=solidarch_fatec_turma6&theme=tokyonight&hide_border=true&bg_color=0d1117&title_color=58a6ff&text_color=c9d1d9&icon_color=58a6ff)](https://github.com/Vinicius-Santos234/solidarch_fatec_turma6)
-
-</div>
-
----
-
 ## 🌊 Gráfico de Contribuições
 
 <div align="center">
