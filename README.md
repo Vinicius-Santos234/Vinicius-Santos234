@@ -1,9 +1,7 @@
 <div align="center">
 
-<!-- Banner animado com nome -->
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:1a1a2e,100:16213e&height=200&section=header&text=Vinicius%20Santos&fontSize=50&fontColor=58a6ff&animation=fadeIn&fontAlignY=38&desc=Desenvolvedor%20Full%20Stack%20%7C%20FATEC%20Matão&descAlignY=58&descSize=18&descColor=8b949e" />
 
-<!-- Typing animation -->
 [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3000&pause=800&color=58A6FF&center=true&vCenter=true&width=600&lines=Ol%C3%A1%2C+eu+sou+Vinicius+Santos!+%F0%9F%91%8B;Estudante+de+DSM+na+FATEC+Mat%C3%A3o;Apaixonado+por+React+%26+JavaScript;Sempre+aprendendo+algo+novo+%F0%9F%9A%80)](https://git.io/typing-svg)
 
 </div>
