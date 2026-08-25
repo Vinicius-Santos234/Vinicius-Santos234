@@ -4,7 +4,7 @@
 
 </div>
 
-<h3 align="center">Vinícius Santos</h3>
+<h3 align="center">Vinicius Santos</h3>
 
 <p align="center">
   Desenvolvedor web focado em <b>React / Next.js</b> e em aplicar <b>IA</b> em coisas que rodam de verdade —
