@@ -136,7 +136,8 @@ def desenhar(d):
 
     # sem token nao ha calendario de contribuicoes: mostra estrelas no lugar da sequencia
     if d["sequencia"] is not None:
-        quarta = ("sequência atual", "%d dias" % d["sequencia"])
+        quarta = ("sequência atual",
+                  "%d dia%s" % (d["sequencia"], "" if d["sequencia"] == 1 else "s"))
     elif d["estrelas"] > 0:
         quarta = ("estrelas recebidas", d["estrelas"])
     else:
