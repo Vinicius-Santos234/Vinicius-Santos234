@@ -50,12 +50,7 @@
 
 <div align="center">
 
-<img height="165" src="https://github-readme-stats.vercel.app/api?username=Vinicius-Santos234&show_icons=true&count_private=true&include_all_commits=true&hide_border=true&title_color=e5484d&icon_color=e5484d&text_color=c9d1d9&bg_color=0b0e14" alt="Estatísticas do GitHub">
-<img height="165" src="https://github-readme-stats.vercel.app/api/top-langs/?username=Vinicius-Santos234&layout=compact&langs_count=8&hide_border=true&title_color=e5484d&text_color=c9d1d9&bg_color=0b0e14" alt="Linguagens mais usadas">
-
-<br>
-
-<img height="165" src="https://streak-stats.demolab.com?user=Vinicius-Santos234&hide_border=true&background=0b0e14&stroke=21262d&ring=e5484d&fire=e5484d&currStreakLabel=e5484d&sideLabels=c9d1d9&currStreakNum=c9d1d9&sideNums=c9d1d9&dates=8b949e" alt="Sequência de contribuições">
+<img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/stats.svg" alt="Estatísticas do GitHub" width="804">
 
 </div>
 
@@ -69,8 +64,4 @@
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0b0e14?style=for-the-badge&logo=linkedin&logoColor=0A66C2)](https://www.linkedin.com/in/vinicius-santos-26a4b5361/)
 [![GitHub](https://img.shields.io/badge/GitHub-0b0e14?style=for-the-badge&logo=github&logoColor=FFFFFF)](https://github.com/Vinicius-Santos234)
 
-</div>
-
-<div align="center">
-  <sub>O sinal fica aceso. Se precisar de um dev, é só apontar para o céu.</sub>
 </div>
