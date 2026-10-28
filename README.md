@@ -1,67 +1,56 @@
-<div align="center">
-
-<img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/bat-signal.svg" alt="Terminal desenhando o simbolo do Batman" width="804">
-
-</div>
-
-<h3 align="center">Vinicius Santos</h3>
-
 <p align="center">
-  Desenvolvedor web focado em <b>React / Next.js</b> e em aplicar <b>IA</b> em coisas que rodam de verdade —
-  assistente de voz, visão computacional e agentes que trabalham sozinhos.<br>
-  Estudante de <b>Desenvolvimento de Software Multiplataforma na Fatec</b> (4º semestre).
+  <img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/banner.svg" width="100%" alt="Vinicius Santos — mosaico animado (fan art de Cyberpunk: Edgerunners 2)">
 </p>
 
----
+<p align="center">
+  <a href="#sobre"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/menu-sobre.svg" width="134" alt="Sobre"></a>
+  <a href="#tecnologias"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/menu-tecnologias.svg" width="134" alt="Tecnologias"></a>
+  <a href="#ia"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/menu-ia.svg" width="134" alt="IA"></a>
+  <a href="#projetos"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/menu-projetos.svg" width="134" alt="Projetos"></a>
+  <a href="#atividade"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/menu-atividade.svg" width="134" alt="Atividade"></a>
+  <a href="#contato"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/menu-contato.svg" width="134" alt="Contato"></a>
+</p>
 
-## Stack
+<a name="sobre"></a>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/sobre.svg" width="100%" alt="Sobre: Desenvolvedor web focado em React / Next.js e em aplicar IA em coisas que rodam de verdade — assistente de voz, visão computacional e agentes que trabalham sozinhos. Estudante de Desenvolvimento de Software Multiplataforma na Fatec (4º semestre).">
+</p>
 
-<div align="center">
+<a name="tecnologias"></a>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/tecnologias.svg" width="100%" alt="Tecnologias: JavaScript, React, Next.js, Vite, Tailwind, CSS, Node.js, Python, Supabase, PostgreSQL, Flutter, Dart, Vitest, Git, Vercel">
+</p>
 
-**Front-end**
+<a name="ia"></a>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/titulo-ia.svg" width="100%" alt="IA"><br>
+  <a href="https://github.com/Vinicius-Santos234/ev-assistente-desktop"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/ia-voz.svg" width="32%" alt="Assistente de voz: Assistente de voz para o Windows em português, offline por padrão, com IA opcional."></a>
+  <a href="https://github.com/Vinicius-Santos234/spotify-por-gestos"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/ia-visao.svg" width="32%" alt="Visão computacional: Controle de música por gestos da mão, pela webcam."></a>
+  <a href="https://github.com/Vinicius-Santos234/agente-ia-servidor"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/ia-agente.svg" width="32%" alt="Agente 24 horas: Agente de IA rodando sem parar num servidor Linux."></a>
+</p>
 
-![JavaScript](https://img.shields.io/badge/JavaScript-0b0e14?style=for-the-badge&logo=javascript&logoColor=F7DF1E)
-![React](https://img.shields.io/badge/React-0b0e14?style=for-the-badge&logo=react&logoColor=61DAFB)
-![Next.js](https://img.shields.io/badge/Next.js-0b0e14?style=for-the-badge&logo=nextdotjs&logoColor=FFFFFF)
-![Vite](https://img.shields.io/badge/Vite-0b0e14?style=for-the-badge&logo=vite&logoColor=B73BFE)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-0b0e14?style=for-the-badge&logo=tailwindcss&logoColor=38BDF8)
-![CSS](https://img.shields.io/badge/CSS-0b0e14?style=for-the-badge&logo=css3&logoColor=1572B6)
+<a name="projetos"></a>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/titulo-projetos.svg" width="100%" alt="Projetos"><br>
+  <a href="https://github.com/Vinicius-Santos234/xereta"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/projeto-xereta.svg" width="49%" alt="Xereta: Um gato no topo da tela que fica de olho no Claude Code e deixa aprovar permissões sem voltar ao terminal."></a>
+  <a href="https://github.com/Vinicius-Santos234/ps5-pela-rede"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/projeto-ps5-pela-rede.svg" width="49%" alt="Ps5 pela rede: Ver se o PS5 está ligado ou em repouso, e ligar ou pôr em repouso, direto do terminal."></a>
+  <a href="https://github.com/Vinicius-Santos234/homem-aranha-um-novo-dia"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/projeto-homem-aranha-um-novo-dia.svg" width="49%" alt="Homem-aranha: um novo dia: Site para aprender animações com rolagem e layout, com o tema do novo filme."></a>
+  <a href="https://github.com/Vinicius-Santos234/segundo-cerebro-claude-code"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/projeto-segundo-cerebro-claude-code.svg" width="49%" alt="Segundo cérebro: Modelo de vault do Obsidian com skills do Claude Code que transformam sessões em conhecimento."></a>
+</p>
 
-**Back-end &amp; dados**
+<a name="atividade"></a>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/atividade.svg" width="100%" alt="Atividade (gerada todo dia)">
+</p>
 
-![Node.js](https://img.shields.io/badge/Node.js-0b0e14?style=for-the-badge&logo=nodedotjs&logoColor=5FA04E)
-![Python](https://img.shields.io/badge/Python-0b0e14?style=for-the-badge&logo=python&logoColor=3776AB)
-![Supabase](https://img.shields.io/badge/Supabase-0b0e14?style=for-the-badge&logo=supabase&logoColor=3ECF8E)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-0b0e14?style=for-the-badge&logo=postgresql&logoColor=4169E1)
+<a name="contato"></a>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/titulo-contato.svg" width="100%" alt="Contato"><br>
+  <a href="mailto:viniciusgsantos234@gmail.com"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/contato-email.svg" width="200" alt="E-mail"></a>
+  <a href="https://www.linkedin.com/in/vinicius-santos-26a4b5361/"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/contato-linkedin.svg" width="200" alt="Linkedin"></a>
+  <a href="https://github.com/Vinicius-Santos234"><img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/contato-github.svg" width="200" alt="Github"></a>
+</p>
 
-**Mobile, testes &amp; deploy**
-
-![Flutter](https://img.shields.io/badge/Flutter-0b0e14?style=for-the-badge&logo=flutter&logoColor=02569B)
-![Dart](https://img.shields.io/badge/Dart-0b0e14?style=for-the-badge&logo=dart&logoColor=0175C2)
-![Vitest](https://img.shields.io/badge/Vitest-0b0e14?style=for-the-badge&logo=vitest&logoColor=6E9F18)
-![Git](https://img.shields.io/badge/Git-0b0e14?style=for-the-badge&logo=git&logoColor=F05032)
-![Vercel](https://img.shields.io/badge/Vercel-0b0e14?style=for-the-badge&logo=vercel&logoColor=FFFFFF)
-
-</div>
-
----
-
-## Estatísticas
-
-<div align="center">
-
-<img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/stats.svg" alt="Estatísticas do GitHub" width="804">
-
-</div>
-
----
-
-## Contato
-
-<div align="center">
-
-[![E-mail](https://img.shields.io/badge/E--mail-0b0e14?style=for-the-badge&logo=gmail&logoColor=e5484d)](mailto:viniciusgsantos234@gmail.com)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0b0e14?style=for-the-badge&logo=linkedin&logoColor=0A66C2)](https://www.linkedin.com/in/vinicius-santos-26a4b5361/)
-[![GitHub](https://img.shields.io/badge/GitHub-0b0e14?style=for-the-badge&logo=github&logoColor=FFFFFF)](https://github.com/Vinicius-Santos234)
-
-</div>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Vinicius-Santos234/Vinicius-Santos234/main/tema/rodape.svg" width="100%" alt="">
+</p>

@@ -1,4 +1,4 @@
-name: atualizar stats
+name: atualizar atividade
 
 on:
   schedule:
@@ -7,8 +7,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "scripts/gerar-stats.py"
-      - ".github/workflows/stats.yml"
+      - "scripts/readme/**"
+      - ".github/workflows/atividade.yml"
 
 permissions:
   contents: write
@@ -23,18 +23,22 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Gerar stats.svg
+      - name: Instalar fontTools (recorta a fonte embutida no SVG)
+        run: pip install fonttools==4.63.0
+
+      - name: Gerar tema/atividade.svg
         env:
-          # Opcional: crie o secret GH_STATS_TOKEN (PAT com escopo read:user)
-          # para incluir commits dos ultimos 12 meses e a sequencia de dias.
+          # O total e o mesmo do grafico do perfil, que conta tambem os privados.
+          # Se o GITHUB_TOKEN padrao nao enxergar isso, crie o secret GH_STATS_TOKEN
+          # (PAT com escopo read:user) e ele passa a ser usado no lugar.
           GITHUB_TOKEN: ${{ secrets.GH_STATS_TOKEN || secrets.GITHUB_TOKEN }}
-        run: python scripts/gerar-stats.py ${{ github.repository_owner }}
+        run: python scripts/readme/gerar_atividade.py ${{ github.repository_owner }} tema/atividade.svg
 
       - name: Commitar se mudou
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add stats.svg
+          git add tema/atividade.svg
           git diff --staged --quiet && echo "nada mudou" && exit 0
-          git commit -m "chore: atualiza stats.svg"
+          git commit -m "chore: atualiza tema/atividade.svg"
           git push
