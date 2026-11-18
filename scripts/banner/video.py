@@ -1,4 +1,4 @@
-"""Leitura do video, remocao de legenda e conversao em celulas (cor media por celula)."""
+"""Leitura do video, remocao das legendas e conversao em celulas (cor media por celula)."""
 import subprocess
 import numpy as np
 import cv2
@@ -6,17 +6,15 @@ from PIL import Image
 
 FW, FH = 960, 540                      # resolucao de trabalho (metade do 1080p)
 COLS, ROWS = 100, 56
-CUT1, CUT2, NFRAMES = 37, 82, 150      # primeiro quadro da cena 2, da cena 3, total
+NFRAMES = 126                          # 4,2 s a 30 qps
 
-# legenda de baixo (cenas 1 e 2), em coordenadas de 960x540
-SUB_BOTTOM = (370, 425, 593, 490)
-
-# cena 3: recorte visivel (x 250..810, y 215..528.6) e a faixa larga que vira o fundo
-S3_CELL = 5.6
-S3_Y0 = 215.0
-S3_X0 = 250.0 - 44 * S3_CELL           # a faixa comeca 44 colunas antes do recorte
-S3_STRIP_COLS = 170
-S3_VIEW_COL = 44                       # coluna da faixa onde o recorte comeca
+# legendas gravadas na imagem: (primeiro quadro, ultimo + 1, caixa em 960x540, quadro limpo para copiar)
+# "Is that it?" cai no escuro parado (copia do quadro 16); "Over already?" tem os raios passando
+# por tras, entao e reconstruida quadro a quadro (copia=None).
+SUBTITLES = [
+    (17, 52, (420, 455, 545, 490), 16),
+    (68, 110, (395, 455, 570, 492), None),
+]
 
 
 def read_frames(video, keep):
@@ -37,44 +35,35 @@ def read_frames(video, keep):
     return out, i
 
 
-def subtitle_mask(rgb, box, grow=13):
+def subtitle_mask(frames, a, b, box, grow=11):
+    """O texto fica parado e os raios nao: e texto o pixel branco em 90% dos quadros do trecho."""
     x0, y0, x1, y1 = box
-    a = rgb.astype(int)
-    white = (a.min(axis=2) > 200) & ((a.max(axis=2) - a.min(axis=2)) < 40)
-    mask = np.zeros(white.shape, np.uint8)
-    mask[y0:y1, x0:x1] = white[y0:y1, x0:x1]
-    if mask.sum() < 30:
-        return None
-    return cv2.dilate(mask * 255, np.ones((grow, grow), np.uint8)) > 0
+    cnt = np.zeros((FH, FW), int)
+    for i in range(a, b):
+        f = frames[i].astype(int)
+        cnt += (f.min(axis=2) > 200) & ((f.max(axis=2) - f.min(axis=2)) < 40)
+    m = np.zeros((FH, FW), np.uint8)
+    m[y0:y1, x0:x1] = cnt[y0:y1, x0:x1] >= 0.9 * (b - a)
+    return cv2.dilate(m * 255, np.ones((grow, grow), np.uint8))
 
 
-def clean_scene1(frames):
-    """Cena 1: o quadro 0 nao tem legenda; o resto pega a regiao da legenda dele."""
-    base = frames[0]
-    for i, f in frames.items():
-        if i == 0 or i >= CUT1:
-            continue
-        m = subtitle_mask(f, SUB_BOTTOM)
-        if m is not None:
-            f[m] = base[m]
+def clean_subtitles(frames):
+    """Apaga as legendas de todos os quadros (precisa de todos os quadros dos trechos)."""
+    for a, b, box, ref in SUBTITLES:
+        m = subtitle_mask(frames, a, b, box)
+        sel = m > 0
+        for i in range(a, b):
+            if ref is not None:
+                frames[i][sel] = frames[ref][sel]
+            else:
+                frames[i] = cv2.inpaint(frames[i], m, 6, cv2.INPAINT_TELEA)
 
 
-def inpaint_subtitle(rgb, box):
-    m = subtitle_mask(rgb, box)
-    if m is None:
-        return rgb
-    return cv2.inpaint(rgb, m.astype(np.uint8) * 255, 8, cv2.INPAINT_TELEA)
-
-
-def to_cells(rgb, cols, rows, box=None):
+def to_cells(rgb, cols=COLS, rows=ROWS, box=None):
     """Cor media de cada celula (float, 0..255), shape (rows, cols, 3)."""
     im = Image.fromarray(rgb)
     small = im.resize((cols, rows), Image.BOX, box=box)
     return np.asarray(small).astype(float)
-
-
-def scene3_strip_box():
-    return (S3_X0, S3_Y0, S3_X0 + S3_STRIP_COLS * S3_CELL, S3_Y0 + ROWS * S3_CELL)
 
 
 def features(c):

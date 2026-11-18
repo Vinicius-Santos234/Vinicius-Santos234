@@ -1,12 +1,13 @@
 """Gera o banner do README: mosaico animado em SVG a partir do video.
 
-Loop de 10 s, para sempre: cena 1 (o rapaz, 5 s) -> glitch -> cena 2 (a Capri, 5 s) -> glitch -> ...
-Cada cena vai e volta em camera lenta (o cabelo balanca, o brilho da juba pisca), com
-alguns caracteres trocando e um brilho de estrela piscando por cima.
+O video (4,2 s) toca uma vez so: o rapaz no escuro, os raios de luz chegando e ele olhando para a luz.
+Para no ultimo quadro e continua vivo: brilho correndo pelos raios, poeira cintilando na nevoa,
+o olho verde brilhando, alguns caracteres trocando e um glitch rapido de vez em quando.
+Onde a animacao nao roda (ou com movimento reduzido), aparece o ultimo quadro parado.
 O video nao vai para o repositorio (e material do anime e pesa): passe o caminho dele.
 Depois, scripts/readme/gerar_visual.py poe a moldura e grava tema/banner.svg.
 
-uso: python scripts/banner/gerar_banner.py VIDEO.webm MOSAICO.svg
+uso: python scripts/banner/gerar_banner.py VIDEO.mp4 MOSAICO.svg
 """
 import base64
 import io
@@ -19,23 +20,23 @@ import cv2
 import numpy as np
 from PIL import Image
 
+import ceu
 import mosaico as st
 import video as bf
 
 CELL = st.CELL
 W, H = bf.COLS * CELL, bf.ROWS * CELL                       # 800 x 448
-CYCLE, HALF = 10.0, 5.0                                     # cena 1 em [0, 5), cena 2 em [5, 10)
-S1_FRAMES = list(range(0, bf.CUT1))                         # todos os 37: camera lenta 2x
-S1_SLOT = 1 / 15
-S2_FRAMES = list(range(bf.CUT1, bf.CUT2, 3))                # 15: so o brilho muda
-S2_SLOT = 4.8 / (2 * len(S2_FRAMES) - 1)
+FPS = 30
+T_END = bf.NFRAMES / FPS                                    # 4,2 s: o video para aqui
+HOLD = 8.0                                                  # ciclo dos detalhes depois que para
+FLOW, FLOW_STEPS, FLOW_SPACE = 3.0, 18, 36                  # brilho nos raios: periodo, passos, distancia (celulas)
 
 
 # ---------------------------------------------------------------- cores: paleta unica
-def palette(colors, k=56):
+def palette(colors, k=112):
     allc = np.concatenate([x.reshape(-1, 3) for x in colors]).astype(np.float32)
     rng = np.random.default_rng(0)
-    allc = allc[rng.choice(len(allc), min(len(allc), 24000), replace=False)]
+    allc = allc[rng.choice(len(allc), min(len(allc), 30000), replace=False)]
     cv2.setRNGSeed(0)
     crit = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 40, 0.5)
     _, _, centers = cv2.kmeans(allc, k, None, crit, 4, cv2.KMEANS_PP_CENTERS)
@@ -85,23 +86,35 @@ class Doc:
             self.defs.append(tag)
         return tag
 
-    def windows(self, inner, intervals):
-        """Mostra `inner` nos intervalos (s) do ciclo de 10 s, para sempre."""
+    def once(self, inner, t_on, t_off):
+        """Mostra `inner` de t_on a t_off (s), uma vez so."""
+        self.n += 1
+        cls = f"k{self.n}"
+        self.css.append(f'.{cls}{{animation:on {t_off - t_on:.3f}s step-end {t_on:.3f}s forwards}}')
+        self.body.append(f'<g class="h {cls}">{inner}</g>')
+
+    def loop(self, inner, intervals, period, delay=None):
+        """Mostra `inner` nos intervalos (s, dentro do periodo), para sempre, a partir de `delay`."""
+        delay = T_END if delay is None else delay
         self.n += 1
         cls = f"k{self.n}"
         pts = {}
         for a, b in intervals:
-            pts[round(a, 3)] = 1
-            pts.setdefault(round(b, 3), 0)
+            a, b = a % period, a % period + (b - a)
+            parts = [(a, b)] if b <= period else [(a, period), (0.0, b - period)]
+            for x, y in parts:
+                pts[round(x, 3)] = 1
+                pts.setdefault(round(y, 3), 0)
         start = pts.get(0.0, 0)
         kf = [f'0%{{opacity:{start}}}']
         last = start
         for t in sorted(pts):
-            if 0 < t < CYCLE:
-                kf.append(f'{t / CYCLE * 100:.3f}%{{opacity:{pts[t]}}}')
+            if 0 < t < period:
+                kf.append(f'{t / period * 100:.3f}%{{opacity:{pts[t]}}}')
                 last = pts[t]
-        kf.append(f'100%{{opacity:{0 if CYCLE in pts else last}}}')
-        self.css.append(f'.{cls}{{animation:{cls} {CYCLE:g}s step-end infinite}}@keyframes {cls}{{{"".join(kf)}}}')
+        kf.append(f'100%{{opacity:{start if round(period, 3) in pts else last}}}')
+        self.css.append(f'.{cls}{{animation:{cls} {period:g}s step-end {delay:.3f}s infinite}}'
+                        f'@keyframes {cls}{{{"".join(kf)}}}')
         self.body.append(f'<g class="h {cls}">{inner}</g>')
 
 
@@ -129,7 +142,7 @@ def noise_strip():
     return st.render(g, col, rng.random((2, bf.COLS)) < 0.55)
 
 
-# ---------------------------------------------------------------- glifos em vetor (trocas e brilho)
+# ---------------------------------------------------------------- glifos em vetor (trocas e brilhos)
 def glyph_paths(doc):
     for name in ['+', '1', 'x', '0', '$', '#', 'full', ':']:
         m = st._mask(name)[::st.SCALE, ::st.SCALE]
@@ -152,128 +165,177 @@ def hexc(c):
     return '#%02x%02x%02x' % tuple(np.clip(c, 0, 255).astype(int))
 
 
+FUNDO_CELULAS = np.zeros((bf.ROWS, bf.COLS), bool)          # o ceu no quadro final (main preenche)
+CEU_GLIFO = np.array([78, 118, 196.0])                      # caractere no ceu escuro: azul, nao o verde do video
+
+
 def cell(r, c, gname, color):
     x, y = c * CELL, r * CELL
-    return (f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" fill="#08090c"/>'
+    bg = hexc(st.FUNDO) if FUNDO_CELULAS[r, c] else '#08090c'
+    return (f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" fill="{bg}"/>'
             f'<use href="#q{st.IDX[gname]}" x="{x}" y="{y}" fill="{color}"/>')
 
 
-def bright_spot(frame, box):
-    """Celula (linha, coluna) do pixel mais claro e sem cor dentro de box (x0, y0, x1, y1)."""
-    x0, y0, x1, y1 = box
-    reg = frame[y0:y1, x0:x1].astype(int)
-    mn = reg.min(axis=2)
-    iy, ix = np.unravel_index(np.where(reg.max(axis=2) - mn < 40, mn, 0).argmax(), mn.shape)
-    return int((iy + y0) / (bf.FH / bf.ROWS)), int((ix + x0) / (bf.FW / bf.COLS))
-
-
-# ---------------------------------------------------------------- cenas em vai e volta
-def pingpong(doc, prefix, states, t0, slot):
-    """Base sempre por baixo; cada quadro k acende em t0+k*slot e apaga na volta, em
-    t0+(2N-1-k)*slot. Como os quadros se empilham, apagar na ordem inversa e voltar no tempo."""
-    n = len(states)
-    cur_g, cur_c = states[0][0].copy(), states[0][1].copy()
-    for k in range(1, n):
-        g, col = states[k]
-        changed = (g != cur_g) | (np.abs(col - cur_c).max(axis=2) > 30)
+# ---------------------------------------------------------------- o video, uma vez
+def playback(doc, states):
+    """Quadro 0 inteiro e, por cima, so as celulas que mudam em cada quadro (caractere, cor ou ceu);
+    tudo some em T_END e fica a base (o estado final acumulado, igual ao ultimo quadro)."""
+    doc.image('v0', st.render(states[0][0], states[0][1], fundo=states[0][2]))
+    doc.once('<use href="#v0"/>', 0.0, T_END)
+    cur_g, cur_c, cur_f = (x.copy() for x in states[0])
+    for k in range(1, len(states)):
+        g, col, f = states[k]
+        changed = (g != cur_g) | (np.abs(col - cur_c).max(axis=2) > 30) | (f != cur_f)
         if not changed.any():
             continue
-        cur_g[changed], cur_c[changed] = g[changed], col[changed]
-        tag = doc.image(f'{prefix}d{k}', st.render(g, col, changed), in_defs=False)
+        cur_g[changed], cur_c[changed], cur_f[changed] = g[changed], col[changed], f[changed]
+        tag = doc.image(f'v{k}', st.render(g, col, changed, fundo=f), in_defs=False)
         if tag:
-            doc.windows(tag, [(t0 + k * slot, t0 + (2 * n - 1 - k) * slot)])
+            doc.once(tag, k / FPS, T_END)
+    return cur_g, cur_c, cur_f
 
 
-def swaps(doc, picks, colors, t_from, t_to, rng, glyph_seq):
-    """Grupos de celulas que trocam de caractere por um instante, espalhados em [t_from, t_to)."""
-    groups = [picks[i::10] for i in range(10)]
-    for gi, cells in enumerate(groups):
-        if not len(cells):
-            continue
-        for rep in range(2):                                   # cada grupo troca duas vezes por cena
-            p = t_from + ((gi * 0.43 + rep * 2.1 + rng.random() * 0.2) % (t_to - t_from - 0.4))
-            for step, gname_of in enumerate(glyph_seq):
-                parts = ''.join(cell(r, c, gname_of(rng), hexc(colors(r, c, step))) for r, c in cells)
-                doc.windows(parts, [(p + step * 0.18, p + (step + 1) * 0.18)])
+# ---------------------------------------------------------------- depois que para
+def beam_direction(luma, beam):
+    """Direcao dos raios (perpendicular ao gradiente dominante nas celulas de raio), apontando para a direita."""
+    l = cv2.GaussianBlur(luma.astype(np.float32), (0, 0), 1.0)
+    gy, gx = np.gradient(l)
+    jxx, jyy, jxy = (gx * gx)[beam].sum(), (gy * gy)[beam].sum(), (gx * gy)[beam].sum()
+    w, v = np.linalg.eigh(np.array([[jxx, jxy], [jxy, jyy]]))
+    dx, dy = v[:, 0]                                        # menor autovalor: ao longo do raio
+    return (dx, dy) if dx >= 0 else (-dx, -dy)
+
+
+def ray_flow(doc, g, col, raw):
+    """Pulsos de luz correndo pelos raios, para o lado de fora da luz (para a direita e para baixo).
+    Quando o pulso passa, o miolo fica branco e o raio engrossa; atras dele fica um rastro mais fraco."""
+    _, luma, _ = bf.features(raw)
+    light, core, ridge = st.light_masks(raw)
+    rf = st.ray_over_face(raw)                              # o raio por cima do rosto: o pulso passa, sem engrossar
+    swell = (cv2.dilate(core.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0) & (luma > 0.3) & ~rf
+    beam = swell | (light & (ridge > 0.02)) | rf
+    dx, dy = beam_direction(luma, core | (light & (ridge > 0.02)))
+    rr, cc = np.mgrid[0:bf.ROWS, 0:bf.COLS]
+    p = cc * dx + rr * dy                                   # posicao ao longo do raio
+    n_lab, lab = cv2.connectedComponents(beam.astype(np.uint8), connectivity=8)
+    off = st.hash01(lab, 0, 7) * FLOW_SPACE                 # cada raio com sua fase
+    phase = np.floor(((p - off) % FLOW_SPACE) / FLOW_SPACE * FLOW_STEPS).astype(int)
+    step = FLOW / FLOW_STEPS
+    denser = np.arange(len(st.NAMES))                       # glifo um degrau mais cheio
+    for a, b in zip(st.RAMP, st.RAMP[1:]):
+        denser[st.IDX[a]] = st.IDX[b]
+    ones = np.ones_like(col)
+    gl = np.where(g >= 0, g, st.IDX['+'])
+    peak_g = np.where(swell, st.IDX['full'], denser[gl])
+    peak_c = np.where(core[..., None], np.array([255, 253, 240.0]) * ones,
+                      np.where(swell[..., None], np.array([255, 236, 175.0]) * ones, np.array([255, 242, 200.0]) * ones))
+    tail_g = np.where(core, st.IDX['full'], gl)
+    tail_c = np.where(core[..., None], np.array([255, 247, 215.0]) * ones, np.minimum(col * 1.3 + 25, 255))
+    for k in range(FLOW_STEPS):
+        grp = beam & (phase == k)
+        tag = doc.image(f'fp{k}', st.render(tail_g, tail_c, grp, fundo=FUNDO_CELULAS), in_defs=False)
+        if tag:
+            doc.loop(tag, [((k + 3) * step, (k + 6) * step)], FLOW)
+        tag = doc.image(f'fq{k}', st.render(peak_g, peak_c, grp, fundo=FUNDO_CELULAS), in_defs=False)
+        if tag:
+            doc.loop(tag, [(k * step, (k + 3) * step)], FLOW)
+    print(f"raios: direcao ({dx:.2f}, {dy:.2f}), {int(beam.sum())} celulas em {n_lab - 1} raios")
+
+
+def dust(doc, g, raw, rng):
+    """Poeira cintilando na nevoa (claro e quente, fora do miolo dos raios)."""
+    light, core, ridge = st.light_masks(raw)
+    cand = np.argwhere(light & ~core & (ridge < 0.03))
+    picks = cand[rng.choice(len(cand), min(48, len(cand)), replace=False)]
+    for gi in range(16):
+        cells = picks[gi::16]
+        for rep in range(2):
+            t = (gi * 0.5 + rep * 4.1 + rng.random() * 0.3) % (HOLD - 0.5)
+            doc.loop(''.join(cell(r, c, 'full', '#fff8e6') for r, c in cells), [(t, t + 0.12)], HOLD)
+            doc.loop(''.join(cell(r, c, '+', '#ffe6a8') for r, c in cells), [(t + 0.12, t + 0.36)], HOLD)
+
+
+def swaps(doc, g, col, raw, rng):
+    """Alguns caracteres do rosto e da roupa trocando por um instante."""
+    light, _, _ = st.light_masks(raw)
+    cand = np.argwhere(~light & (g >= st.IDX['1']) & (g <= st.IDX['#']))
+    picks = cand[rng.choice(len(cand), min(30, len(cand)), replace=False)]
+    for gi in range(10):
+        cells = picks[gi::10]
+        for rep in range(2):
+            t = (gi * 0.71 + rep * 3.7 + rng.random() * 0.2) % (HOLD - 0.6)
+            doc.loop(''.join(cell(r, c, 'x', hexc(col[r, c] * 1.25)) for r, c in cells), [(t, t + 0.18)], HOLD)
+            doc.loop(''.join(cell(r, c, str(rng.choice(['1', '0', '$'])), hexc(col[r, c])) for r, c in cells),
+                     [(t + 0.18, t + 0.36)], HOLD)
 
 
 # ---------------------------------------------------------------- montagem
 def main(video, out_path):
-    frames, n = bf.read_frames(video, set(S1_FRAMES) | set(S2_FRAMES))
+    frames, n = bf.read_frames(video, set(range(bf.NFRAMES)))
     assert n == bf.NFRAMES, n
-    bf.clean_scene1(frames)
-    # cena 2: a legenda e a mesma o tempo todo; apaga no primeiro quadro e copia o remendo
-    base2 = frames[bf.CUT1]
-    m2 = bf.subtitle_mask(base2, bf.SUB_BOTTOM)
-    fixed = bf.inpaint_subtitle(base2, bf.SUB_BOTTOM)
-    for i in S2_FRAMES:
-        frames[i][m2] = fixed[m2]
+    bf.clean_subtitles(frames)
+    raws = [bf.to_cells(frames[i]) for i in range(n)]
+    skies = ceu.sky_masks([frames[i] for i in range(n)])
+    states = []
+    for i, c in enumerate(raws):
+        g, col = st.luz(c, frames[i], skies[i])
+        light, _, _ = st.light_masks(c)
+        dark_sky = skies[i] & ~light & ~st.ray_over_face(c) & (g >= 0)
+        _, luma, _ = bf.features(c)
+        k = np.clip(0.45 + luma * 2.5, 0.45, 1.0)[..., None]
+        col = np.where(dark_sky[..., None], CEU_GLIFO * k, col)
+        states.append((g, col, skies[i]))
+    centers = palette([col[g >= 0] for g, col, _ in states])
 
-    s1 = [st.literal(bf.to_cells(frames[i], bf.COLS, bf.ROWS)) for i in S1_FRAMES]
-    s2 = [st.literal(bf.to_cells(frames[i], bf.COLS, bf.ROWS)) for i in S2_FRAMES]
-    centers = palette([col[g >= 0] for g, col in s1 + s2])
-    s1 = [(g, snap(col, centers)) for g, col in s1]
-    s2 = [(g, snap(col, centers)) for g, col in s2]
+    states = [(g, snap(col, centers), f) for g, col, f in states]
 
     doc = Doc()
     glyph_paths(doc)
     doc.image('ruido', noise_strip())
 
-    # cena 1 por baixo de tudo (e o que fica se a animacao nao rodar); cena 2 por cima na metade dela
-    doc.image('s1', st.render(*s1[0]))
-    doc.image('s2', st.render(*s2[0]))
-    doc.body.append('<use href="#s1"/>')
-    pingpong(doc, 's1', s1, 0.0, S1_SLOT)
-    doc.windows('<use href="#s2"/>', [(HALF, CYCLE)])
-    pingpong(doc, 's2', s2, HALF, S2_SLOT)
+    g_end, c_end, f_end = playback(doc, states)
+    FUNDO_CELULAS[:] = f_end
+    doc.image('fim', st.render(g_end, c_end, fundo=FUNDO_CELULAS))
+    doc.body.insert(0, '<use href="#fim"/>')                # por baixo de tudo: e o que fica
 
+    # entrada: glitch que estabiliza (o primeiro lampejo e do quadro final)
+    for t0, dur, src, bands, noise in [
+        (0.080, 0.10, 'fim', [(6, 3, -7), (15, 5, 9), (27, 2, -4), (38, 4, 12), (47, 3, -6)], [21, 44]),
+        (0.180, 0.10, 'v0', [(10, 4, 5), (30, 3, -8), (41, 2, 4)], [33]),
+        (0.280, 0.10, 'v0', [(24, 2, -3), (44, 2, 2)], []),
+    ]:
+        doc.once(glitch_frame(doc, src, bands, noise), t0, t0 + dur)
+
+    # depois que para
     rng = np.random.default_rng(11)
-    # cena 1: alguns caracteres claros trocando, e o brilho de estrela da direita piscando
-    g1, c1 = s1[0]
-    tone1, _, _ = bf.features(bf.to_cells(frames[0], bf.COLS, bf.ROWS))
-    cand = np.argwhere((g1 >= st.IDX['1']) & (g1 != st.IDX['full']) & (tone1 > 0.55))
-    picks = cand[rng.choice(len(cand), min(30, len(cand)), replace=False)]
-    swaps(doc, picks, lambda r, c, step: c1[r, c] * (1.25 if step == 0 else 1.0), 0.5, 4.7, rng,
-          [lambda q: 'x', lambda q: str(q.choice(['1', '0', '$']))])
-    sr, sc = bright_spot(frames[0], (700, 150, 900, 300))
-    arms = ''.join(cell(sr + dr, sc + dc, '+', '#ffe8cc') for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)))
-    doc.windows(cell(sr, sc, 'full', '#fffaf2') + arms,
-                [(t, t + 0.3) for t in (0.9, 2.3, 3.7)])
+    raw = raws[-1]
+    ray_flow(doc, g_end, c_end, raw)
+    dust(doc, g_end, raw, rng)
+    swaps(doc, g_end, c_end, raw, rng)
+    eye = st.is_eye(raw)
+    if eye.any():
+        er, ec = np.unravel_index(np.where(eye, raw[..., 1] - raw[..., 0], -1).argmax(), eye.shape)
+        arms = ''.join(cell(er + a, ec + b, '+', '#c8ffd8') for a, b in ((-1, 0), (1, 0), (0, -1), (0, 1)))
+        doc.loop(cell(er, ec, 'full', '#eafff0') + arms, [(t, t + 0.3) for t in (1.1, 5.3)], HOLD)
+    for t0, dur, bands, noise in [
+        (6.40, 0.10, [(8, 4, 10), (22, 3, -12), (35, 5, 6)], [30]),
+        (6.50, 0.067, [(12, 6, -9), (30, 4, 14), (44, 3, -5)], [20, 40]),
+    ]:
+        doc.loop(glitch_frame(doc, 'fim', bands, noise), [(t0, t0 + dur)], HOLD)
 
-    # cena 2: o brilho da juba (rosa) piscando em bloco claro e voltando em outro caractere
-    g2, c2 = s2[0]
-    raw2 = bf.to_cells(frames[bf.CUT1], bf.COLS, bf.ROWS)
-    _, _, sat2 = bf.features(raw2)
-    cand = np.argwhere((sat2 > 0.5) & (raw2[..., 0] > 150) & (raw2[..., 2] > raw2[..., 1]))
-    picks = cand[rng.choice(len(cand), min(70, len(cand)), replace=False)]
-    swaps(doc, picks, lambda r, c, step: np.array([255, 205, 232]) if step == 0 else c2[r, c] * 1.15,
-          HALF + 0.4, CYCLE - 0.3, rng, [lambda q: 'full', lambda q: str(q.choice(['0', 'x', '$', '#']))])
-
-    # glitch nos cortes; o quadro 0 fica limpo (e o que aparece onde a animacao nao roda)
-    cuts = [
-        (0.080, 0.10, 's2', [(6, 3, -7), (15, 5, 9), (27, 2, -4), (38, 4, 12), (47, 3, -6)], [21, 44]),
-        (0.180, 0.10, 's1', [(10, 4, 5), (30, 3, -8), (41, 2, 4)], [33]),
-        (0.280, 0.10, 's1', [(24, 2, -3), (44, 2, 2)], []),
-        (HALF - 0.10, 0.10, 's1', [(8, 4, 10), (22, 3, -12), (35, 5, 6)], [30]),
-        (HALF, 0.067, 's1', [(12, 6, -9), (30, 4, 14), (44, 3, -5)], [20, 40]),
-        (HALF + 0.067, 0.10, 's2', [(18, 3, 6), (38, 2, -4)], []),
-        (CYCLE - 0.10, 0.10, 's2', [(6, 3, -8), (20, 5, 11), (41, 3, -6)], [33]),
-    ]
-    for t0, dur, src, bands, noise in cuts:
-        doc.windows(glitch_frame(doc, src, bands, noise), [(t0, t0 + dur)])
-
-    css = ('.h{opacity:0}' + ''.join(doc.css) +
+    css = ('.h{opacity:0}@keyframes on{0%{opacity:1}100%{opacity:0}}' + ''.join(doc.css) +
            '@media (prefers-reduced-motion:reduce){*{animation:none!important}}')
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" '
-           f'role="img" aria-label="Mosaico de caracteres animado com cenas de Cyberpunk: Edgerunners 2">'
+           f'role="img" aria-label="Mosaico de caracteres animado com uma cena de Cyberpunk: Edgerunners 2">'
            f'<title>Mosaico animado (fan art de Cyberpunk: Edgerunners 2)</title>'
            f'<style>{css}</style><defs>{"".join(doc.defs)}</defs>'
            f'<rect width="{W}" height="{H}" fill="#08090c"/>{"".join(doc.body)}</svg>')
     with open(out_path, 'w', encoding='utf-8') as fh:
         fh.write(svg)
-    print(f"svg: {len(svg.encode()) / 1024:.0f} KB  (imagens {sum(doc.bytes.values()) / 1024:.0f} KB antes do base64)")
-    print(f"cena 1: {len(S1_FRAMES)} quadros, {(2 * len(S1_FRAMES) - 1) * S1_SLOT:.2f} s;"
-          f" cena 2: {len(S2_FRAMES)} quadros, {(2 * len(S2_FRAMES) - 1) * S2_SLOT:.2f} s; estrela em {sr},{sc}")
+    play = sum(v for k, v in doc.bytes.items() if k.startswith('v'))
+    print(f"ceu: {int(skies[0].sum())} celulas no quadro 0, {int(FUNDO_CELULAS.sum())} no final")
+    print(f"svg: {len(svg.encode()) / 1024:.0f} KB  (imagens {sum(doc.bytes.values()) / 1024:.0f} KB antes do base64;"
+          f" video {play / 1024:.0f} KB)  camadas: {doc.n}")
 
 
 if __name__ == '__main__':
